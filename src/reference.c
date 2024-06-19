@@ -30,7 +30,7 @@ void computeError(
 }
 
 void test_bl_sgemm(
-        FILE *fp,
+        //FILE *fp,
         int m,
         int n,
         int k
@@ -152,11 +152,11 @@ void test_bl_sgemm(
     flops = ( m * n / ( 1000.0 * 1000.0 * 1000.0 ) ) * ( 2 * k );
     
     // <-------------------------------------------------------------------------printf results real time
-    //printf( "%5d\t %5d\t %5d\t %5.3lf\t %5.3lf\n", 
-    //        m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime );
+    printf( "%5d\t %5d\t %5d\t %5.3lf\t %5.3lf\n", 
+            m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime );
     
     // Guardar los resultados en el archivo CSV.
-    fprintf(fp, "%d,%d,%d,%5.3lf,%5.3lf\n", m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime);
+    //fprintf(fp, "%d,%d,%d,%5.3lf,%5.3lf\n", m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime);
 
 
     free( A     );
@@ -174,17 +174,17 @@ int main( int argc, char *argv[] )
 
     //return 0;
 
-    FILE *fp = fopen("results.csv", "w");
-    if (!fp) {
-        perror("No se pudo abrir el archivo CSV");
-        return 1;
-    }
+    //FILE *fp = fopen("results.csv", "w");
+    //if (!fp) {
+    //    perror("No se pudo abrir el archivo CSV");
+    //    return 1;
+    //}
 
     // Escribir encabezado en el archivo CSV.
-    fprintf(fp, "m,n,k,Version0,Version1\n"); //<----------------------------Set actual version
+    //fprintf(fp, "m,n,k,Version0,Version1\n"); //<----------------------------Set actual version
 
-    //printf("%%m\t%%n\t%%k\t%%Version0\t%%Version1\n");
-    printf("Start\n");
+    printf("%%m\t%%n\t%%k\t%%Version0\t%%Version1\n");
+    //printf("Start\n");
     //<--------------------------------------------------------------------------------
     //for(int i = 16; i <= 800; i += 4) {
     
@@ -192,7 +192,8 @@ int main( int argc, char *argv[] )
     //for (int j = 10; j <= 800; j+= 100){
         //for(int i = 16; i <= 800; i += 4) {
         for(int i = 20; i < 1000; i += 20) {//<----------------------------------Set max number of iterations and step betwen interations
-            test_bl_sgemm(fp,i, i, i);
+            //test_bl_sgemm(fp,i, i, i);
+            test_bl_sgemm(i, i, i);
         }
     //}
 
@@ -201,8 +202,8 @@ int main( int argc, char *argv[] )
     //    test_bl_sgemm(fp,i, i, 11000);
     //}
 
-    fclose(fp);
-    printf("ok\n");
+    //fclose(fp);
+    //printf("ok\n");
 
     return 0;
 }
