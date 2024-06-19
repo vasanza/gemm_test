@@ -1,6 +1,6 @@
 #!/bin/bash
 
-codes="reference.x reference-vec.x increase-vec.x increase-vl.x flex-datatype.x"
+codes="version0.x reference-vec.x increase-vec.x increase-vl.x flex-datatype.x"
 
 echo -e "version\ttime_per_iteration"
 for code in $codes
