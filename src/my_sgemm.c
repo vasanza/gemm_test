@@ -29,11 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * bl_config.h
+ * bl_sgemm.c
  *
  *
  * Purpose:
- * this header file contains configuration parameters.
+ * this is the main file of blislab sgemm.
  *
  * Todo:
  *
@@ -42,24 +42,39 @@
  *
  * 
  * */
+ 
 
-#ifndef BLISLAB_CONFIG_H
-#define BLISLAB_CONFIG_H
+#include <bl_sgemm.h>
 
-// Allow C++ users to include this header file in their source code. However,
-// we make the extern "C" conditional on whether we're using a C++ compiler,
-// since regular C compilers don't understand the extern "C" construct.
-#ifdef __cplusplus
-extern "C" {
-#endif
+void bl_sgemm(
+    int    m,
+    int    n,
+    int    k,
+    float *A,
+    int    lda,
+    float *B,
+    int    ldb,
+    float *C,        // must be aligned
+    int    ldc        // ldc must also be aligned
+)
+{
+  int    i, j, p;
 
-#define DGEMM_MR 4
-#define DGEMM_NR 16
+  // Early return if possible
+  if ( m == 0 || n == 0 || k == 0 ) {
+    printf( "bl_sgemm(): early return\n" );
+    return;
+  }
 
-// End extern "C" construct block.
-#ifdef __cplusplus
+  for ( i = 0; i < m; i ++ ) {              // Start 2-th loop
+      for ( j = 0; j < n; j ++ ) {          // Start 1-nd loop
+        for ( p = 0; p < k; p ++ ) {        // Start 0-st loop
+
+              C( i, j ) += A( i, p ) * B( p, j ); //Each operand is a MACRO defined in bl_sgemm() function.
+
+          }                                 // End   0-th loop
+      }                                     // End   1-st loop
+  }                                         // End   2-nd loop
 }
-#endif
 
-#endif
 

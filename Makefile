@@ -8,16 +8,16 @@ VEHAVEFLAGS=-DVEHAVE -I/apps/riscv/vehave/EPI-0.7/development/include/vehave/
 
 all: codes 
 
-reference.x: src/test_bl_sgemm_packB_4x16.c
+reference.x: src/my_sgemm.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
-reference-i-extrae.x: src/sgemm.c
+reference-i-extrae.x: src/my_sgemm.c
 	$(CC) $(CFLAGS) $^ -o $@ $(EXTRAEFLAGS) $(LIBS)
 
-reference-vec.x: src/test_bl_sgemm_packB_4x16.c
+reference-vec.x: src/my_sgemm.c
 	$(CC) $(CFLAGS) $(VFLAGS) $^ -o $@ $(LIBS)
 
-reference-vec-i-vehave.x: src/sgemm.c
+reference-vec-i-vehave.x: src/my_sgemm.c
 	$(CC) $(CFLAGS) $(VFLAGS) $^ -o $@ $(VEHAVEFLAGS) $(LIBS)
 
 %-i-vehave.x: src/%.c
