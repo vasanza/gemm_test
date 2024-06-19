@@ -98,7 +98,7 @@ void PackWeightLayout(float* dst, const float* src, int nc, int kc, int nr, bool
 }
 
 void test_bl_sgemm(
-        FILE *fp,
+        //FILE *fp,
         int m,
         int n,
         int k
@@ -267,11 +267,11 @@ void test_bl_sgemm(
     flops = ( m * n / ( 1000.0 * 1000.0 * 1000.0 ) ) * ( 2 * k );
     
         // <-------------------------------------------------------------------------printf results real time
-    //printf( "%5d\t %5d\t %5d\t %5.3lf\t %5.3lf\n", 
-    //        m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime );
+    printf( "%5d\t %5d\t %5d\t %5.3lf\t %5.3lf\n", 
+            m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime );
     
     // Guardar los resultados en el archivo CSV.
-    fprintf(fp, "%d,%d,%d,%5.3lf,%5.3lf\n", m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime);
+    //fprintf(fp, "%d,%d,%d,%5.3lf,%5.3lf\n", m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime);
 
     free( A     );
     free( packA );
@@ -307,7 +307,7 @@ int main( int argc, char *argv[] )
     // Prueba 1: A(m=4k,K=4k) * B(K=4k,n=4k) = C(m=4k,n=4k)
     //for (int j = 10; j <= 800; j+= 100){
         //for(int i = 16; i <= 800; i += 4) {
-        for(int i = 20; i < 1000; i += 20) {//<----------------------------------Set max number of iterations and step betwen interations
+        for(int i = 20; i < 100; i += 20) {//<----------------------------------Set max number of iterations and step betwen interations
             test_bl_sgemm(fp,i, i, i);
         }
     //}
