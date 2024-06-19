@@ -308,7 +308,7 @@ int main( int argc, char *argv[] )
     //for (int j = 10; j <= 800; j+= 100){
         //for(int i = 16; i <= 800; i += 4) {
         for(int i = 20; i < 100; i += 20) {//<----------------------------------Set max number of iterations and step betwen interations
-            test_bl_sgemm(fp,i, i, i);
+            test_bl_sgemm(i, i, i);
         }
     //}
 
