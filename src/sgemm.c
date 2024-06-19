@@ -44,7 +44,7 @@
  * */
  
 
-#include <bl_sgemm.h>
+#include "bl_sgemm.h"
 
 void bl_sgemm(
     int    m,
@@ -65,7 +65,7 @@ void bl_sgemm(
     printf( "bl_sgemm(): early return\n" );
     return;
   }
-
+  //---------------------------VERSION 0------------------------------
   for ( i = 0; i < m; i ++ ) {              // Start 2-th loop
       for ( j = 0; j < n; j ++ ) {          // Start 1-nd loop
         for ( p = 0; p < k; p ++ ) {        // Start 0-st loop
