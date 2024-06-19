@@ -29,7 +29,6 @@ reference-vec-i-vehave.x: src/reference-i.c
 %.x: src/%.c
 	$(CC) $(CFLAGS) $(VFLAGS) $^ -o $@ $(LIBS)
 
-//comentarios
 codes: version0.x reference-vec.x increase-vec.x increase-vl.x flex-datatype.x
 codes-vehave: reference-vec-i-vehave.x light-i-vehave.x increase-vec-i-vehave.x increase-vl-i-vehave.x flex-datatype-i-vehave.x
 codes-extrae: reference-i-extrae.x increase-vec-i-extrae.x increase-vl-i-extrae.x flex-datatype-i-extrae.x friendly-i-extrae.x
