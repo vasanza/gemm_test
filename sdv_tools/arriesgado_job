@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --partition=arriesgado-jammy
+#SBATCH --nodes=1
+#SBATCH --time=01:00:00
+#SBATCH --export=NONE
+
+HOST="`hostname`"
+printf "******************************\n"
+printf "* Arriesgado node: %s\n" "${HOST}"
+printf "******************************\n\n"
+
+cd $SLURM_SUBMIT_DIR
+$@

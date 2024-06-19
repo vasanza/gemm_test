@@ -1,0 +1,5 @@
+#!/bin/bash
+mkdir -p vehave_prv_traces
+name=`basename $1`
+VEHAVE_TRACE_SINGLE_THREAD=1 VEHAVE_TRACE=1 VEHAVE_VECTOR_LENGTH=$((256*64)) VEHAVE_TRACE_FILE=vehave_prv_traces/$name.trace VEHAVE_DEBUG_LEVEL=0 vehave ./$@
+vehave2prv --output-dir vehave_prv_traces vehave_prv_traces/$name.trace 

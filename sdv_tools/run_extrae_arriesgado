@@ -1,0 +1,20 @@
+#!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+#Load Extrae
+VERSION=4.0.4
+#source /etc/profile.d/modules.sh
+module unload extrae
+module load extrae/${VERSION} 
+export LD_LIBRARY_PATH=${PAPI_LIBS}:$LD_LIBRARY_PATH
+export EXTRAE_CONFIG_FILE=${SCRIPT_DIR}/extrae-arriesgado.xml
+
+#Execute instrumented binary
+LD_PRELOAD=${EXTRAE_HOME}/lib/libseqtrace.so:${LD_PRELOAD} "$@"
+
+#Move traces to extrae_prv_traces folder
+mkdir -p extrae_prv_traces 
+tracename=`basename $1`
+finalname=$tracename
+for ext in prv pcf row; do mv ${tracename}.${ext} extrae_prv_traces/arr-${finalname}.${ext}; done
+rm -rf set-0
