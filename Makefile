@@ -8,22 +8,30 @@ VEHAVEFLAGS=-DVEHAVE -I/apps/riscv/vehave/EPI-0.7/development/include/vehave/
 
 all: codes 
 
-test.x: src/test_bl_sgemm.c
+reference.x: src/reference.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
-sgemm.x: src/sgemm.c
+reference-i-extrae.x: src/reference-i.c
+	$(CC) $(CFLAGS) $^ -o $@ $(EXTRAEFLAGS) $(LIBS)
+
+reference-vec.x: src/reference.c
 	$(CC) $(CFLAGS) $(VFLAGS) $^ -o $@ $(LIBS)
 
-util.x: src/bl_sgemm_util.c
+reference-vec-i-vehave.x: src/reference-i.c
 	$(CC) $(CFLAGS) $(VFLAGS) $^ -o $@ $(VEHAVEFLAGS) $(LIBS)
 
-ref.x: src/bl_sgemm_ref.c
+%-i-vehave.x: src/%.c
 	$(CC) $(CFLAGS) $(VFLAGS) $^ -o $@ $(VEHAVEFLAGS) $(LIBS)
+
+%-i-extrae.x: src/%.c
+	$(CC) $(CFLAGS) $(VFLAGS) $^ -o $@ $(EXTRAEFLAGS) $(LIBS)
 
 %.x: src/%.c
 	$(CC) $(CFLAGS) $(VFLAGS) $^ -o $@ $(LIBS)
 
-codes: test.x sgemm.x util.x ref.x
+codes: reference.x reference-vec.x increase-vec.x increase-vl.x flex-datatype.x
+codes-vehave: reference-vec-i-vehave.x light-i-vehave.x increase-vec-i-vehave.x increase-vl-i-vehave.x flex-datatype-i-vehave.x
+codes-extrae: reference-i-extrae.x increase-vec-i-extrae.x increase-vl-i-extrae.x flex-datatype-i-extrae.x friendly-i-extrae.x
 
 clean:
 	rm -f *.x
