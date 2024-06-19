@@ -191,7 +191,7 @@ int main( int argc, char *argv[] )
     // Prueba 1: A(m=4k,K=4k) * B(K=4k,n=4k) = C(m=4k,n=4k)
     //for (int j = 10; j <= 800; j+= 100){
         //for(int i = 16; i <= 800; i += 4) {
-        for(int i = 20; i < 1000; i += 20) {//<----------------------------------Set max number of iterations and step betwen interations
+        for(int i = 20; i < 100; i += 2) {//<----------------------------------Set max number of iterations and step betwen interations
             //test_bl_sgemm(fp,i, i, i);
             test_bl_sgemm(i, i, i);
         }
