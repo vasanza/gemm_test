@@ -6,7 +6,7 @@ m_values = []
 my_gflops = []
 ref_gflops = []
 
-with open('results.csv', 'r') as csvfile:
+with open('results0.csv', 'r') as csvfile:
     csvreader = csv.reader(csvfile)
     next(csvreader)  # Saltar la cabecera
     for row in csvreader:
@@ -22,5 +22,5 @@ plt.ylabel('GFLOPS')
 plt.title('Performance Comparison')
 plt.legend()
 plt.grid(True)
-plt.savefig('performance_comparison.png')
+plt.savefig('performance_comparison_v0.png')
 plt.show()

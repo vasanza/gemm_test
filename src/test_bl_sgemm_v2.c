@@ -41,12 +41,13 @@
  * Modification:
  *
  * ----------------------------------------------------------------------
- * gcc test_bl_sgemm_v0.c -o test_bl_sgemm -lm
+ * gcc test_bl_sgemm_v2.c -o test_bl_sgemm -lm
  *-----------------------------------------------------------------------
  * */
 
 
 #include "bl_sgemm.h"
+#include "bl_config.h"
 
 #define ERROR_TEST
 
@@ -176,6 +177,25 @@ float bl_clock( void )
 /*------------------------------------------------------------------------------------------
 ////////////////////////////////////SGEMM CODE from sgemm.c ////////////////////////////////
 ------------------------------------------------------------------------------------------*/
+void AddDot( int k, float *A, int lda, float *B, int ldb, float *result ) {
+  int p;
+  for ( p = 0; p < k; p++ ) {
+    *result += A( 0, p ) * B( p, 0 );
+  }
+}
+
+void AddDot_MRxNR( int k, float *A, int lda, float *B, int ldb, float *C, int ldc )
+{
+  int ir, jr;
+  int p;
+  for ( jr = 0; jr < DGEMM_NR; jr++ ) {
+    for ( ir = 0; ir < DGEMM_MR; ir++ ) {
+      AddDot( k, &A( ir, 0 ), lda, &B( 0, jr ), ldb, &C( ir, jr ) );
+    }
+  }
+}
+
+
 void bl_sgemm(
     int    m,
     int    n,
@@ -188,23 +208,21 @@ void bl_sgemm(
     int    ldc        // ldc must also be aligned
 )
 {
-  int    i, j, p;
+    int i, j, p;
+    int ir, jr;
 
-  // Early return if possible
-  if ( m == 0 || n == 0 || k == 0 ) {
-    printf( "bl_sgemm(): early return\n" );
-    return;
-  }
-  //---------------------------VERSION 0------------------------------
-  for ( i = 0; i < m; i ++ ) {              // Start 2-th loop
-      for ( j = 0; j < n; j ++ ) {          // Start 1-nd loop
-        for ( p = 0; p < k; p ++ ) {        // Start 0-st loop
+    // Early return if possible
+    if ( m == 0 || n == 0 || k == 0 ) {
+        printf( "bl_sgemm(): early return\n" );
+        return;
+    }
+    //---------------------------VERSION 2------------------------------
 
-              C( i, j ) += A( i, p ) * B( p, j ); //Each operand is a MACRO defined in bl_sgemm() function.
-
-          }                                 // End   0-th loop
-      }                                     // End   1-st loop
-  }                                         // End   2-nd loop
+    for ( i = 0; i < m; i += DGEMM_MR ) {          // Start 2-nd loop
+      for ( j = 0; j < n; j += DGEMM_NR ) {        // Start 1-st loop
+           AddDot_MRxNR( k, &A( i, 0 ), lda, &B( 0, j ), ldb, &C( i, j ), ldc );
+        }                                          // End   1-st loop
+    }                                              // End   2-nd loop
 }
 
 /*------------------------------------------------------------------------------------------
@@ -359,16 +377,16 @@ int main( int argc, char *argv[] )
 
     //return 0;
 
-    FILE *fp = fopen("results0.csv", "w");
+    FILE *fp = fopen("results2.csv", "w");
     if (!fp) {
         perror("No se pudo abrir el archivo CSV");
         return 1;
     }
 
     // Escribir encabezado en el archivo CSV.
-    fprintf(fp, "m,n,k,Version0,Version1\n"); //<--------Set actual version
+    fprintf(fp, "m,n,k,Version2,Version1\n"); //<--------Set actual version
 
-    printf("%%m\t%%n\t%%k\t%%Version0\t%%Version1\n");
+    printf("%%m\t%%n\t%%k\t%%Version2\t%%Version1\n");
     //printf("Start\n");
         for(int i = 16; i < 200; i += 4) {//<---Set max number of iterations and step betwen interations
             test_bl_sgemm(fp,i, i, i);
@@ -381,4 +399,7 @@ int main( int argc, char *argv[] )
     return 0;
 }
 
-// gcc test_bl_sgemm_v0.c -o test_bl_sgemm -lm
+// gcc test_bl_sgemm_v2.c -o test_bl_sgemm -lm
+
+
+
