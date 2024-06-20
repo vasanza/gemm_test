@@ -8,7 +8,7 @@ VEHAVEFLAGS=-DVEHAVE -I/apps/riscv/vehave/EPI-0.7/development/include/vehave/
 
 all: codes 
 
-version0.x: src/version0.c
+version0.x: src/version0_2.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
 reference-i-extrae.x: src/reference-i.c

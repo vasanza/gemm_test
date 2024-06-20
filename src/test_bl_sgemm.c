@@ -29,200 +29,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * bl_sgemm.h
+ * test_bl_sgemm.c
  *
  *
  * Purpose:
- * this header file contains all function prototypes.
+ * test driver for BLISLAB sgemm routine and reference sgemm routine.
  *
  * Todo:
  *
  *
  * Modification:
  *
- * 
+ * ----------------------------------------------------------------------
+ * gcc test_bl_sgemm.c sgemm.c bl_sgemm_util.c bl_sgemm_ref.c -o test_bl_sgemm -lm
+ *-----------------------------------------------------------------------
  * */
 
 
-//#ifndef BLISLAB_DGEMM_H
-//#define BLISLAB_DGEMM_H
-
-// Allow C++ users to include this header file in their source code. However,
-// we make the extern "C" conditional on whether we're using a C++ compiler,
-// since regular C compilers don't understand the extern "C" construct.
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-//gcc reference.c sgemm.c bl_sgemm_util.c -o reference -lm
-#include <stdlib.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdbool.h>
- 
+#include "bl_sgemm.h"
 
 #define ERROR_TEST
 
 #define TOLERANCE 1E-2
-//-------------------------------------------------------
-
-// Determine the target operating system
-
-#if defined(__linux__)
-#define BL_OS_LINUX 1
-#else
-#error "unsupport OS, this only support Linux"
-#endif
-
-// gettimeofday() needs this.
-#include <sys/time.h>
-#include <time.h>
-
-#define GEMM_SIMD_ALIGN_SIZE 32
-
-#define min( i, j ) ( (i)<(j) ? (i): (j) )
-
-// #define A( i, j )     A[ (j)*lda + (i) ]
-// #define B( i, j )     B[ (j)*ldb + (i) ]
-// #define C( i, j )     C[ (j)*ldc + (i) ]
-// #define C_ref( i, j ) C_ref[ (j)*ldc_ref + (i) ]
-
-#define A( i, j )     A[ (i)*lda + (j) ]
-#define B( i, j )     B[ (i)*ldb + (j) ]
-#define C( i, j )     C[ (i)*ldc + (j) ]
-#define C_ref( i, j ) C_ref[ (i)*ldc_ref + (j) ]
-
-//-------------------------------------------------------------
-// from bl_sgemm_ref.c-----
-void bl_sgemm_ref(
-        int    m,
-        int    n,
-        int    k,
-        float *XA,
-        int    lda,
-        float *XB,
-        int    ldb,
-        float *XC,
-        int    ldc
-        )
-{
-    // Local variables.
-    int    i, j, p;
-    float alpha = 1.0, beta = 1.0;
-
-    // Sanity check for early return.
-    if ( m == 0 || n == 0 || k == 0 ) return;
-
-    // Reference GEMM implementation.
-    for ( i = 0; i < m; i ++ ) {
-        for ( p = 0; p < k; p ++ ) {
-            for ( j = 0; j < n; j ++ ) {
-                XC[ i * ldc + j ] += XA[ i * lda + p ] * XB[ p * ldb + j ];
-            }
-        }
-    }
-}
-
-// from bl_sgemm_util.c-----
-
-float *bl_malloc_aligned(
-        int    m,
-        int    n,
-        int    size
-        )
-{
-    float *ptr;
-    int    err;
-
-    err = posix_memalign( (void**)&ptr, (size_t)GEMM_SIMD_ALIGN_SIZE, size * m * n );
-
-    if ( err ) {
-        printf( "bl_malloc_aligned(): posix_memalign() failures" );
-        exit( 1 );    
-    }
-
-    return ptr;
-}
-
-void bl_sgemm_printmatrix(
-        float *A,
-        int    lda,
-        int    m,
-        int    n
-        )
-{
-    int    i, j;
-    for ( i = 0; i < m; i ++ ) {
-        for ( j = 0; j < n; j ++ ) {
-            printf("%lf\t", A[j * lda + i]);
-        }
-        printf("\n");
-    }
-}
-
-/*
- * The timer functions are copied directly from BLIS 0.2.0
- *
- */
-static float gtod_ref_time_sec = 0.0;
-
-// --- Begin Linux build definitions --
-
-float bl_clock_helper()
-{
-    float the_time, norm_sec;
-    struct timespec ts;
-
-    clock_gettime( CLOCK_MONOTONIC, &ts );
-
-    if ( gtod_ref_time_sec == 0.0 )
-        gtod_ref_time_sec = ( float ) ts.tv_sec;
-
-    norm_sec = ( float ) ts.tv_sec - gtod_ref_time_sec;
-
-    the_time = norm_sec + ts.tv_nsec * 1.0e-9;
-
-    return the_time;
-}
-
-float bl_clock( void )
-{
-	return bl_clock_helper();
-}
-
-// from sgemm.c----------------------------------
-void bl_sgemm(
-    int    m,
-    int    n,
-    int    k,
-    float *A,
-    int    lda,
-    float *B,
-    int    ldb,
-    float *C,        // must be aligned
-    int    ldc        // ldc must also be aligned
-)
-{
-  int    i, j, p;
-
-  // Early return if possible
-  if ( m == 0 || n == 0 || k == 0 ) {
-    printf( "bl_sgemm(): early return\n" );
-    return;
-  }
-  //---------------------------VERSION 0------------------------------
-  for ( i = 0; i < m; i ++ ) {              // Start 2-th loop
-      for ( j = 0; j < n; j ++ ) {          // Start 1-nd loop
-        for ( p = 0; p < k; p ++ ) {        // Start 0-st loop
-
-              C( i, j ) += A( i, p ) * B( p, j ); //Each operand is a MACRO defined in bl_sgemm() function.
-
-          }                                 // End   0-th loop
-      }                                     // End   1-st loop
-  }                                         // End   2-nd loop
-}
-//----------------------------------------------
 void computeError(
         int    ldc,
         int    ldc_ref,
@@ -245,7 +73,7 @@ void computeError(
 }
 
 void test_bl_sgemm(
-        //FILE *fp,
+        FILE *fp,
         int m,
         int n,
         int k
@@ -367,11 +195,11 @@ void test_bl_sgemm(
     flops = ( m * n / ( 1000.0 * 1000.0 * 1000.0 ) ) * ( 2 * k );
     
     // <-------------------------------------------------------------------------printf results real time
-    printf( "%5d\t %5d\t %5d\t %5.3lf\t %5.3lf\n", 
-            m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime );
+    //printf( "%5d\t %5d\t %5d\t %5.3lf\t %5.3lf\n", 
+    //        m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime );
     
     // Guardar los resultados en el archivo CSV.
-    //fprintf(fp, "%d,%d,%d,%5.3lf,%5.3lf\n", m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime);
+    fprintf(fp, "%d,%d,%d,%5.3lf,%5.3lf\n", m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime);
 
 
     free( A     );
@@ -389,17 +217,17 @@ int main( int argc, char *argv[] )
 
     //return 0;
 
-    //FILE *fp = fopen("results.csv", "w");
-    //if (!fp) {
-    //    perror("No se pudo abrir el archivo CSV");
-    //    return 1;
-    //}
+    FILE *fp = fopen("results.csv", "w");
+    if (!fp) {
+        perror("No se pudo abrir el archivo CSV");
+        return 1;
+    }
 
     // Escribir encabezado en el archivo CSV.
-    //fprintf(fp, "m,n,k,Version0,Version1\n"); //<----------------------------Set actual version
+    fprintf(fp, "m,n,k,Version0,Version1\n"); //<----------------------------Set actual version
 
-    printf("%%m\t%%n\t%%k\t%%Version0\t%%Version1\n");
-    //printf("Start\n");
+    //printf("%%m\t%%n\t%%k\t%%Version0\t%%Version1\n");
+    printf("Start\n");
     //<--------------------------------------------------------------------------------
     //for(int i = 16; i <= 800; i += 4) {
     
@@ -407,8 +235,7 @@ int main( int argc, char *argv[] )
     //for (int j = 10; j <= 800; j+= 100){
         //for(int i = 16; i <= 800; i += 4) {
         for(int i = 20; i < 100; i += 2) {//<----------------------------------Set max number of iterations and step betwen interations
-            //test_bl_sgemm(fp,i, i, i);
-            test_bl_sgemm(i, i, i);
+            test_bl_sgemm(fp,i, i, i);
         }
     //}
 
@@ -417,10 +244,9 @@ int main( int argc, char *argv[] )
     //    test_bl_sgemm(fp,i, i, 11000);
     //}
 
-    //fclose(fp);
-    //printf("ok\n");
+    fclose(fp);
+    printf("ok\n");
 
     return 0;
 }
-
 
