@@ -195,8 +195,8 @@ void test_bl_sgemm(
     flops = ( m * n / ( 1000.0 * 1000.0 * 1000.0 ) ) * ( 2 * k );
     
     // <-------------------------------------------------------------------------printf results real time
-    //printf( "%5d\t %5d\t %5d\t %5.3lf\t %5.3lf\n", 
-    //        m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime );
+    printf( "%5d\t %5d\t %5d\t %5.3lf\t %5.3lf\n", 
+            m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime );
     
     // Guardar los resultados en el archivo CSV.
     fprintf(fp, "%d,%d,%d,%5.3lf,%5.3lf\n", m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime);
@@ -226,8 +226,8 @@ int main( int argc, char *argv[] )
     // Escribir encabezado en el archivo CSV.
     fprintf(fp, "m,n,k,Version0,Version1\n"); //<----------------------------Set actual version
 
-    //printf("%%m\t%%n\t%%k\t%%Version0\t%%Version1\n");
-    printf("Start\n");
+    printf("%%m\t%%n\t%%k\t%%Version0\t%%Version1\n");
+    //printf("Start\n");
     //<--------------------------------------------------------------------------------
     //for(int i = 16; i <= 800; i += 4) {
     
