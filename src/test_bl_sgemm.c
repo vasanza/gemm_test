@@ -41,7 +41,7 @@
  * Modification:
  *
  * ----------------------------------------------------------------------
- * gcc test_bl_sgemm.c sgemm.c bl_sgemm_util.c bl_sgemm_ref.c -o test_bl_sgemm -lm
+ * gcc test_bl_sgemm.c sgemm.c -o test_bl_sgemm -lm
  *-----------------------------------------------------------------------
  * */
 
@@ -71,7 +71,143 @@ void computeError(
     }
 
 }
+//--------------Here is new code from bl_sgemm_util.c bl_sgemm_ref.c--------------
+void bl_sgemm_ref(
+        int    m,
+        int    n,
+        int    k,
+        float *XA,
+        int    lda,
+        float *XB,
+        int    ldb,
+        float *XC,
+        int    ldc
+        )
+{
+    // Local variables.
+    int    i, j, p;
+    float alpha = 1.0, beta = 1.0;
 
+    // Sanity check for early return.
+    if ( m == 0 || n == 0 || k == 0 ) return;
+
+    // Reference GEMM implementation.
+    for ( i = 0; i < m; i ++ ) {
+        for ( p = 0; p < k; p ++ ) {
+            for ( j = 0; j < n; j ++ ) {
+                XC[ i * ldc + j ] += XA[ i * lda + p ] * XB[ p * ldb + j ];
+            }
+        }
+    }
+}
+/*
+ *
+ *
+ */ 
+float *bl_malloc_aligned(
+        int    m,
+        int    n,
+        int    size
+        )
+{
+    float *ptr;
+    int    err;
+
+    err = posix_memalign( (void**)&ptr, (size_t)GEMM_SIMD_ALIGN_SIZE, size * m * n );
+
+    if ( err ) {
+        printf( "bl_malloc_aligned(): posix_memalign() failures" );
+        exit( 1 );    
+    }
+
+    return ptr;
+}
+
+/*
+ *
+ *
+ */
+void bl_sgemm_printmatrix(
+        float *A,
+        int    lda,
+        int    m,
+        int    n
+        )
+{
+    int    i, j;
+    for ( i = 0; i < m; i ++ ) {
+        for ( j = 0; j < n; j ++ ) {
+            printf("%lf\t", A[j * lda + i]);
+        }
+        printf("\n");
+    }
+}
+
+/*
+ * The timer functions are copied directly from BLIS 0.2.0
+ *
+ */
+static float gtod_ref_time_sec = 0.0;
+
+// --- Begin Linux build definitions ---
+
+float bl_clock_helper()
+{
+    float the_time, norm_sec;
+    struct timespec ts;
+
+    clock_gettime( CLOCK_MONOTONIC, &ts );
+
+    if ( gtod_ref_time_sec == 0.0 )
+        gtod_ref_time_sec = ( float ) ts.tv_sec;
+
+    norm_sec = ( float ) ts.tv_sec - gtod_ref_time_sec;
+
+    the_time = norm_sec + ts.tv_nsec * 1.0e-9;
+
+    return the_time;
+}
+
+// --- End Linux build definitions ---
+float bl_clock( void )
+{
+	return bl_clock_helper();
+}
+/*------------------------------------------------------------------------------------------
+////////////////////////////////////SGEMM CODE from sgemm.c ////////////////////////////////
+------------------------------------------------------------------------------------------*/
+void bl_sgemm(
+    int    m,
+    int    n,
+    int    k,
+    float *A,
+    int    lda,
+    float *B,
+    int    ldb,
+    float *C,        // must be aligned
+    int    ldc        // ldc must also be aligned
+)
+{
+  int    i, j, p;
+
+  // Early return if possible
+  if ( m == 0 || n == 0 || k == 0 ) {
+    printf( "bl_sgemm(): early return\n" );
+    return;
+  }
+  //---------------------------VERSION 0------------------------------
+  for ( i = 0; i < m; i ++ ) {              // Start 2-th loop
+      for ( j = 0; j < n; j ++ ) {          // Start 1-nd loop
+        for ( p = 0; p < k; p ++ ) {        // Start 0-st loop
+
+              C( i, j ) += A( i, p ) * B( p, j ); //Each operand is a MACRO defined in bl_sgemm() function.
+
+          }                                 // End   0-th loop
+      }                                     // End   1-st loop
+  }                                         // End   2-nd loop
+}
+
+//-------------------------------Main code of matrix multiplication-------------------------
 void test_bl_sgemm(
         FILE *fp,
         int m,
@@ -191,14 +327,14 @@ void test_bl_sgemm(
             );
 #endif
 
-    // Compute overall floating point operations.
+    // <------------Compute overall floating point operations.
     flops = ( m * n / ( 1000.0 * 1000.0 * 1000.0 ) ) * ( 2 * k );
     
-    // <-------------------------------------------------------------------------printf results real time
+    // <------------printf results real time
     printf( "%5d\t %5d\t %5d\t %5.3lf\t %5.3lf\n", 
             m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime );
     
-    // Guardar los resultados en el archivo CSV.
+    // <------------Guardar los resultados en el archivo CSV.
     fprintf(fp, "%d,%d,%d,%5.3lf,%5.3lf\n", m, n, k, flops / bl_sgemm_rectime, flops / ref_rectime);
 
 
@@ -208,6 +344,9 @@ void test_bl_sgemm(
     free( C_ref );
 }
 
+/*------------------------------------------------------------------------------------------
+/////////////////////////////////////////// main /////////////////////////////////////////
+------------------------------------------------------------------------------------------*/
 int main( int argc, char *argv[] )
 {
     //printf("%%m\t%%n\t%%k\t%%MY_GFLOPS\t%%REF_GFLOPS\n");
@@ -224,25 +363,14 @@ int main( int argc, char *argv[] )
     }
 
     // Escribir encabezado en el archivo CSV.
-    fprintf(fp, "m,n,k,Version0,Version1\n"); //<----------------------------Set actual version
+    fprintf(fp, "m,n,k,Version0,Version1\n"); //<--------Set actual version
 
     printf("%%m\t%%n\t%%k\t%%Version0\t%%Version1\n");
     //printf("Start\n");
-    //<--------------------------------------------------------------------------------
-    //for(int i = 16; i <= 800; i += 4) {
-    
-    // Prueba 1: A(m=4k,K=4k) * B(K=4k,n=4k) = C(m=4k,n=4k)
-    //for (int j = 10; j <= 800; j+= 100){
-        //for(int i = 16; i <= 800; i += 4) {
-        for(int i = 20; i < 100; i += 2) {//<----------------------------------Set max number of iterations and step betwen interations
+        for(int i = 20; i < 100; i += 2) {//<---Set max number of iterations and step betwen interations
             test_bl_sgemm(fp,i, i, i);
         }
-    //}
-
-    // Prueba 2: A(m=4k,K=4k) * B(K=4k,n=11k) = C(m=4k,n=11k)
-    //for(int i = 16; i <= 4000; i += 4) {
-    //    test_bl_sgemm(fp,i, i, 11000);
-    //}
+   
 
     fclose(fp);
     printf("ok\n");
@@ -250,3 +378,4 @@ int main( int argc, char *argv[] )
     return 0;
 }
 
+// gcc test_bl_sgemm.c -o test_bl_sgemm -lm

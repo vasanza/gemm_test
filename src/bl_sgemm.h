@@ -29,11 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * bl_sgemm.c
+ * bl_sgemm.h
  *
  *
  * Purpose:
- * this is the main file of blislab sgemm.
+ * this header file contains all function prototypes.
  *
  * Todo:
  *
@@ -42,39 +42,55 @@
  *
  * 
  * */
- 
 
-#include "bl_sgemm.h"
 
-void bl_sgemm(
-    int    m,
-    int    n,
-    int    k,
-    float *A,
-    int    lda,
-    float *B,
-    int    ldb,
-    float *C,        // must be aligned
-    int    ldc        // ldc must also be aligned
-)
-{
-  int    i, j, p;
+//#ifndef BLISLAB_DGEMM_H
+//#define BLISLAB_DGEMM_H
 
-  // Early return if possible
-  if ( m == 0 || n == 0 || k == 0 ) {
-    printf( "bl_sgemm(): early return\n" );
-    return;
-  }
-  //---------------------------VERSION 0------------------------------
-  for ( i = 0; i < m; i ++ ) {              // Start 2-th loop
-      for ( j = 0; j < n; j ++ ) {          // Start 1-nd loop
-        for ( p = 0; p < k; p ++ ) {        // Start 0-st loop
+// Allow C++ users to include this header file in their source code. However,
+// we make the extern "C" conditional on whether we're using a C++ compiler,
+// since regular C compilers don't understand the extern "C" construct.
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-              C( i, j ) += A( i, p ) * B( p, j ); //Each operand is a MACRO defined in bl_sgemm() function.
 
-          }                                 // End   0-th loop
-      }                                     // End   1-st loop
-  }                                         // End   2-nd loop
+#include <math.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// Determine the target operating system
+
+#if defined(__linux__)
+#define BL_OS_LINUX 1
+#else
+#error "unsupport OS, this only support Linux"
+#endif
+
+// gettimeofday() needs this.
+#include <sys/time.h>
+#include <time.h>
+
+#define GEMM_SIMD_ALIGN_SIZE 32
+
+#define min( i, j ) ( (i)<(j) ? (i): (j) )
+
+// #define A( i, j )     A[ (j)*lda + (i) ]
+// #define B( i, j )     B[ (j)*ldb + (i) ]
+// #define C( i, j )     C[ (j)*ldc + (i) ]
+// #define C_ref( i, j ) C_ref[ (j)*ldc_ref + (i) ]
+
+#define A( i, j )     A[ (i)*lda + (j) ]
+#define B( i, j )     B[ (i)*ldb + (j) ]
+#define C( i, j )     C[ (i)*ldc + (j) ]
+#define C_ref( i, j ) C_ref[ (i)*ldc_ref + (j) ]
+
+// End extern "C" construct block.
+#ifdef __cplusplus
 }
+#endif
 
+//#endif
 
