@@ -1,0 +1,6 @@
+ scp -r vasanza@ssh.hca.bsc.es:~/gemm_test/results0.csv .
+ scp -r vasanza@ssh.hca.bsc.es:~/gemm_test/results1.csv .
+ scp -r vasanza@ssh.hca.bsc.es:~/gemm_test/results2.csv .
+ scp -r vasanza@ssh.hca.bsc.es:~/gemm_test/results3.csv .
+ scp -r vasanza@ssh.hca.bsc.es:~/gemm_test/results4.csv .
+ scp -r vasanza@ssh.hca.bsc.es:~/gemm_test/results5.csv .
